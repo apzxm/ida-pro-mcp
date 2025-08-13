@@ -22,7 +22,7 @@ def fixup_tool_argument_descriptions(mcp: FastMCP):
     # In our tool definitions within `mcp-plugin.py`, we use `typing.Annotated` on function parameters
     # to attach documentation. For example:
     #
-    #     def get_function_by_name(
+    #     def func_by_name(
     #         name: Annotated[str, "Name of the function to get"]
     #     ) -> Function:
     #         """Get a function by its name"""
@@ -42,7 +42,7 @@ def fixup_tool_argument_descriptions(mcp: FastMCP):
     #         }
     #       },
     #       required: ["name"],
-    #       title: "get_function_by_nameArguments",
+    #       title: "func_by_nameArguments",
     #       type: "object"
     #     }
     #
@@ -57,7 +57,7 @@ def fixup_tool_argument_descriptions(mcp: FastMCP):
     #         }
     #       },
     #       required: ["name"],
-    #       title: "get_function_by_nameArguments",
+    #       title: "func_by_nameArguments",
     #       type: "object"
     #     }
     #

@@ -55,10 +55,10 @@ def make_jsonrpc_request(method: str, *params):
         conn.close()
 
 @mcp.tool()
-def check_connection() -> str:
+def check() -> str:
     """Check if the IDA plugin is running"""
     try:
-        metadata = make_jsonrpc_request("get_metadata")
+        metadata = make_jsonrpc_request("meta")
         return f"Successfully connected to IDA Pro (open file: {metadata['module']})"
     except Exception as e:
         if sys.platform == "darwin":
@@ -195,13 +195,13 @@ except:
 
 exec(compile(code, GENERATED_PY, "exec"))
 
-MCP_FUNCTIONS = ["check_connection"] + list(visitor.functions.keys())
+MCP_FUNCTIONS = ["check"] + list(visitor.functions.keys())
 UNSAFE_FUNCTIONS = visitor.unsafe
 SAFE_FUNCTIONS = [f for f in visitor.functions.keys() if f not in UNSAFE_FUNCTIONS]
 
 def generate_readme():
     print("README:")
-    print(f"- `check_connection()`: Check if the IDA plugin is running.")
+    print(f"- `check()`: Check if the IDA plugin is running.")
     def get_description(name: str):
         function = visitor.functions[name]
         signature = function.name + "("

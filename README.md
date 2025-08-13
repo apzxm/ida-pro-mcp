@@ -8,45 +8,59 @@ The binaries and prompt for the video are available in the [mcp-reversing-datase
 
 Available functionality:
 
-- `check_connection()`: Check if the IDA plugin is running.
-- `get_metadata()`: Get metadata about the current IDB.
-- `get_function_by_name(name)`: Get a function by its name.
-- `get_function_by_address(address)`: Get a function by its address.
-- `get_current_address()`: Get the address currently selected by the user.
-- `get_current_function()`: Get the function currently selected by the user.
-- `convert_number(text, size)`: Convert a number (decimal, hexadecimal) to different representations.
-- `list_functions(offset, count)`: List all functions in the database (paginated).
-- `list_globals_filter(offset, count, filter)`: List matching globals in the database (paginated, filtered).
-- `list_globals(offset, count)`: List all globals in the database (paginated).
-- `list_strings_filter(offset, count, filter)`: List matching strings in the database (paginated, filtered).
-- `list_strings(offset, count)`: List all strings in the database (paginated).
-- `list_local_types()`: List all Local types in the database.
-- `decompile_function(address)`: Decompile a function at the given address.
-- `disassemble_function(start_address)`: Get assembly code (address: instruction; comment) for a function.
-- `get_xrefs_to(address)`: Get all cross references to the given address.
-- `get_xrefs_to_field(struct_name, field_name)`: Get all cross references to a named struct field (member).
-- `get_entry_points()`: Get all entry points in the database.
-- `set_comment(address, comment)`: Set a comment for a given address in the function disassembly and pseudocode.
-- `rename_local_variable(function_address, old_name, new_name)`: Rename a local variable in a function.
-- `rename_global_variable(old_name, new_name)`: Rename a global variable.
-- `set_global_variable_type(variable_name, new_type)`: Set a global variable's type.
-- `rename_function(function_address, new_name)`: Rename a function.
-- `set_function_prototype(function_address, prototype)`: Set a function's prototype.
-- `declare_c_type(c_declaration)`: Create or update a local type from a C declaration.
-- `set_local_variable_type(function_address, variable_name, new_type)`: Set a local variable's type.
+- `check()`: Check if the IDA plugin is running.
+- `meta()`: Get metadata about the current IDB.
+- `func_by_name(name)`: Get a function by its name.
+- `func_by_addr(address)`: Get a function by its address.
+- `cur_addr()`: Get the address currently selected by the user.
+- `cur_func()`: Get the function currently selected by the user.
+- `conv_num(text, size)`: Convert a number (decimal, hexadecimal) to different representations.
+- `list_funcs(offset, count)`: List all functions in the database (paginated).
+- `list_globals_f(offset, count, filter)`: List matching globals in the database (paginated, filtered).
+- `list_globs(offset, count)`: List all globals in the database (paginated).
+- `list_strings_f(offset, count, filter)`: List matching strings in the database (paginated, filtered).
+- `list_strs(offset, count)`: List all strings in the database (paginated).
+- `list_types()`: List all Local types in the database.
+- `decomp(address)`: Decompile a function at the given address.
+- `disasm(start_address)`: Get assembly code (address: instruction; comment) for a function.
+- `xrefs_to(address)`: Get all cross references to the given address.
+- `xrefs_field(struct_name, field_name)`: Get all cross references to a named struct field (member).
+- `entries()`: Get all entry points in the database.
+- `comment(address, comment)`: Set a comment for a given address in the function disassembly and pseudocode.
+- `ren_lvar(function_address, old_name, new_name)`: Rename a local variable in a function.
+- `ren_gvar(old_name, new_name)`: Rename a global variable.
+- `set_gvar_type(variable_name, new_type)`: Set a global variable's type.
+- `ren_func(function_address, new_name)`: Rename a function.
+- `set_proto(function_address, prototype)`: Set a function's prototype.
+- `decl_type(c_declaration)`: Create or update a local type from a C declaration.
+- `set_lvar_type(function_address, variable_name, new_type)`: Set a local variable's type.
+- `gvar_val_name(variable_name)`: Get global variable value by name.
+- `gvar_val_addr(address)`: Get global variable value at address.
+- `stack_vars(function_address)`: Get stack frame variables.
+- `structs()`: Get defined structures.
+- `ren_svar(function_address, old_name, new_name)`: Rename stack frame variable.
+- `new_svar(function_address, name, type)`: Create stack frame variable.
+- `set_svar_type(function_address, variable_name, new_type)`: Set stack frame variable type.
+- `del_svar(function_address, variable_name)`: Delete stack frame variable.
+- `read_mem(address, size)`: Read memory bytes.
+- `read_byte(address)`: Read byte from data.
+- `read_word(address)`: Read word from data.
+- `read_dword(address)`: Read dword from data.
+- `read_qword(address)`: Read qword from data.
+- `read_str(address)`: Read string from data.
 
 Unsafe functions (`--unsafe` flag required):
 
-- `dbg_get_registers()`: Get all registers and their values. This function is only available when debugging.
-- `dbg_get_call_stack()`: Get the current call stack.
-- `dbg_list_breakpoints()`: List all breakpoints in the program.
-- `dbg_start_process()`: Start the debugger.
-- `dbg_exit_process()`: Exit the debugger.
-- `dbg_continue_process()`: Continue the debugger.
-- `dbg_run_to(address)`: Run the debugger to the specified address.
-- `dbg_set_breakpoint(address)`: Set a breakpoint at the specified address.
-- `dbg_delete_breakpoint(address)`: del a breakpoint at the specified address.
-- `dbg_enable_breakpoint(address, enable)`: Enable or disable a breakpoint at the specified address.
+- `regs()`: Get all registers and their values. This function is only available when debugging.
+- `stack()`: Get the current call stack.
+- `bps()`: List all breakpoints in the program.
+- `start()`: Start the debugger.
+- `exit()`: Exit the debugger.
+- `cont()`: Continue the debugger.
+- `run_to(address)`: Run the debugger to the specified address.
+- `set_bp(address)`: Set a breakpoint at the specified address.
+- `del_bp(address)`: del a breakpoint at the specified address.
+- `en_bp(address, enable)`: Enable or disable a breakpoint at the specified address.
 
 ## Prerequisites
 
@@ -93,7 +107,7 @@ LLMs are prone to hallucinations and you need to be specific with your prompting
 > - Change the variable and argument types if necessary (especially pointer and array types)
 > - Change function names to be more descriptive
 > - If more details are necessary, disassemble the function and add comments with your findings
-> - NEVER convert number bases yourself. Use the convert_number MCP tool if needed!
+> - NEVER convert number bases yourself. Use the conv_num MCP tool if needed!
 > - Do not attempt brute forcing, derive any solutions purely from the disassembly and simple python scripts
 > - Create a report.md with your findings and steps taken at the end
 > - When you find a solution, prompt to user for feedback with the password you found
@@ -173,7 +187,7 @@ To check if the connection works you can perform the following tool call:
 ```
 <use_mcp_tool>
 <server_name>github.com/mrexodia/ida-pro-mcp</server_name>
-<tool_name>check_connection</tool_name>
+<tool_name>check</tool_name>
 <arguments></arguments>
 </use_mcp_tool>
 ```
@@ -205,7 +219,7 @@ Feel free to open a PR to add your IDA Pro MCP server here.
 
 ## Development
 
-Adding new features is a super easy and streamlined process. All you have to do is add a new `@jsonrpc` function to [`mcp-plugin.py`](https://github.com/mrexodia/ida-pro-mcp/blob/164df8cf4ae251cc9cc0f464591fa6df8e0d9df4/src/ida_pro_mcp/mcp-plugin.py#L406-L419) and your function will be available in the MCP server without any additional boilerplate! Below is a video where I add the `get_metadata` function in less than 2 minutes (including testing):
+Adding new features is a super easy and streamlined process. All you have to do is add a new `@jsonrpc` function to [`mcp-plugin.py`](https://github.com/mrexodia/ida-pro-mcp/blob/164df8cf4ae251cc9cc0f464591fa6df8e0d9df4/src/ida_pro_mcp/mcp-plugin.py#L406-L419) and your function will be available in the MCP server without any additional boilerplate! Below is a video where I add the `meta` function in less than 2 minutes (including testing):
 
 https://github.com/user-attachments/assets/951de823-88ea-4235-adcb-9257e316ae64
 

@@ -423,7 +423,7 @@ def get_image_size() -> int:
 
 @jsonrpc
 @idaread
-def get_metadata() -> Metadata:
+def meta() -> Metadata:
     """Get metadata about the current IDB"""
     # Fat Mach-O binaries can return a None hash:
     # https://github.com/mrexodia/ida-pro-mcp/issues/26
@@ -571,7 +571,7 @@ def get_type_by_name(type_name: str) -> ida_typeinf.tinfo_t:
 
 @jsonrpc
 @idaread
-def get_function_by_name(
+def func_by_name(
     name: Annotated[str, "Name of the function to get"]
 ) -> Function:
     """Get a function by its name"""
@@ -589,7 +589,7 @@ def get_function_by_name(
 
 @jsonrpc
 @idaread
-def get_function_by_address(
+def func_by_addr(
     address: Annotated[str, "Address of the function to get"],
 ) -> Function:
     """Get a function by its address"""
@@ -597,13 +597,13 @@ def get_function_by_address(
 
 @jsonrpc
 @idaread
-def get_current_address() -> str:
+def cur_addr() -> str:
     """Get the address currently selected by the user"""
     return hex(idaapi.get_screen_ea())
 
 @jsonrpc
 @idaread
-def get_current_function() -> Optional[Function]:
+def cur_func() -> Optional[Function]:
     """Get the function currently selected by the user"""
     return get_function(idaapi.get_screen_ea())
 
@@ -615,7 +615,7 @@ class ConvertedNumber(TypedDict):
     binary: str
 
 @jsonrpc
-def convert_number(
+def conv_num(
     text: Annotated[str, "Textual representation of the number to convert"],
     size: Annotated[Optional[int], "Size of the variable in bytes"],
 ) -> ConvertedNumber:
@@ -687,7 +687,7 @@ def pattern_filter(data: list[T], pattern: str, key: str) -> list[T]:
 
 @jsonrpc
 @idaread
-def list_functions(
+def list_funcs(
     offset: Annotated[int, "Offset to start listing from (start at 0)"],
     count: Annotated[int, "Number of functions to list (100 is a good default, 0 means remainder)"],
 ) -> Page[Function]:
@@ -701,7 +701,7 @@ class Global(TypedDict):
 
 @jsonrpc
 @idaread
-def list_globals_filter(
+def list_globals_f(
     offset: Annotated[int, "Offset to start listing from (start at 0)"],
     count: Annotated[int, "Number of globals to list (100 is a good default, 0 means remainder)"],
     filter: Annotated[str, "Filter to apply to the list (required parameter, empty string for no filter). Case-insensitive contains or /regex/ syntax"],
@@ -717,12 +717,12 @@ def list_globals_filter(
     return paginate(globals, offset, count)
 
 @jsonrpc
-def list_globals(
+def list_globs(
     offset: Annotated[int, "Offset to start listing from (start at 0)"],
     count: Annotated[int, "Number of globals to list (100 is a good default, 0 means remainder)"],
 ) -> Page[Global]:
     """List all globals in the database (paginated)"""
-    return list_globals_filter(offset, count, "")
+    return list_globals_f(offset, count, "")
 
 class Import(TypedDict):
     address: str
@@ -731,7 +731,7 @@ class Import(TypedDict):
 
 @jsonrpc
 @idaread
-def list_imports(
+def list_imps(
         offset: Annotated[int, "Offset to start listing from (start at 0)"],
         count: Annotated[int, "Number of imports to list (100 is a good default, 0 means remainder)"],
 ) -> Page[Import]:
@@ -764,7 +764,7 @@ class String(TypedDict):
 
 @jsonrpc
 @idaread
-def list_strings_filter(
+def list_strings_f(
     offset: Annotated[int, "Offset to start listing from (start at 0)"],
     count: Annotated[int, "Number of strings to list (100 is a good default, 0 means remainder)"],
     filter: Annotated[str, "Filter to apply to the list (required parameter, empty string for no filter). Case-insensitive contains or /regex/ syntax"],
@@ -784,16 +784,16 @@ def list_strings_filter(
     return paginate(strings, offset, count)
 
 @jsonrpc
-def list_strings(
+def list_strs(
     offset: Annotated[int, "Offset to start listing from (start at 0)"],
     count: Annotated[int, "Number of strings to list (100 is a good default, 0 means remainder)"],
 ) -> Page[String]:
     """List all strings in the database (paginated)"""
-    return list_strings_filter(offset, count, "")
+    return list_strings_f(offset, count, "")
 
 @jsonrpc
 @idaread
-def list_local_types():
+def list_types():
     """List all Local types in the database"""
     error = ida_hexrays.hexrays_failure_t()
     locals = []
@@ -834,7 +834,7 @@ def decompile_checked(address: int) -> ida_hexrays.cfunc_t:
     cfunc: ida_hexrays.cfunc_t = ida_hexrays.decompile_func(address, error, ida_hexrays.DECOMP_WARNINGS)
     if not cfunc:
         if error.code == ida_hexrays.MERR_LICENSE:
-            raise DecompilerLicenseError("Decompiler licence is not available. Use `disassemble_function` to get the assembly code instead.")
+            raise DecompilerLicenseError("Decompiler licence is not available. Use `disasm` to get the assembly code instead.")
 
         message = f"Decompilation failed at {hex(address)}"
         if error.str:
@@ -846,7 +846,7 @@ def decompile_checked(address: int) -> ida_hexrays.cfunc_t:
 
 @jsonrpc
 @idaread
-def decompile_function(
+def decomp(
     address: Annotated[str, "Address of the function to decompile"],
 ) -> str:
     """Decompile a function at the given address"""
@@ -898,7 +898,7 @@ class DisassemblyFunction(TypedDict):
 
 @jsonrpc
 @idaread
-def disassemble_function(
+def disasm(
     start_address: Annotated[str, "Address of the function to disassemble"],
 ) -> DisassemblyFunction:
     """Get assembly code for a function"""
@@ -966,7 +966,7 @@ def disassemble_function(
 
                 # print its value if its type is available
                 try:
-                    value = get_global_variable_value_internal(addr)
+                    value = gvar_val_internal(addr)
                 except:
                     continue
 
@@ -999,7 +999,7 @@ def disassemble_function(
     disassembly_function = DisassemblyFunction(
         name=func.name,
         start_ea=f"{func.start_ea:#x}",
-        stack_frame=get_stack_frame_variables_internal(func.start_ea),
+        stack_frame=stack_vars_internal(func.start_ea),
         lines=lines
     )
 
@@ -1018,7 +1018,7 @@ class Xref(TypedDict):
 
 @jsonrpc
 @idaread
-def get_xrefs_to(
+def xrefs_to(
     address: Annotated[str, "Address to get cross references to"],
 ) -> list[Xref]:
     """Get all cross references to the given address"""
@@ -1034,7 +1034,7 @@ def get_xrefs_to(
 
 @jsonrpc
 @idaread
-def get_xrefs_to_field(
+def xrefs_field(
     struct_name: Annotated[str, "Name of the struct (type) containing the field"],
     field_name: Annotated[str, "Name of the field (member) to get xrefs to"],
 ) -> list[Xref]:
@@ -1076,7 +1076,7 @@ def get_xrefs_to_field(
 
 @jsonrpc
 @idaread
-def get_entry_points() -> list[Function]:
+def entries() -> list[Function]:
     """Get all entry points in the database"""
     result = []
     for i in range(ida_entry.get_entry_qty()):
@@ -1089,7 +1089,7 @@ def get_entry_points() -> list[Function]:
 
 @jsonrpc
 @idawrite
-def set_comment(
+def comment(
     address: Annotated[str, "Address in the function to set the comment for"],
     comment: Annotated[str, "Comment text"],
 ):
@@ -1156,7 +1156,7 @@ def refresh_decompiler_ctext(function_address: int):
 
 @jsonrpc
 @idawrite
-def rename_local_variable(
+def ren_lvar(
     function_address: Annotated[str, "Address of the function containing the variable"],
     old_name: Annotated[str, "Current name of the variable"],
     new_name: Annotated[str, "New name for the variable (empty for a default name)"],
@@ -1171,7 +1171,7 @@ def rename_local_variable(
 
 @jsonrpc
 @idawrite
-def rename_global_variable(
+def ren_gvar(
     old_name: Annotated[str, "Current name of the global variable"],
     new_name: Annotated[str, "New name for the global variable (empty for a default name)"],
 ):
@@ -1183,7 +1183,7 @@ def rename_global_variable(
 
 @jsonrpc
 @idawrite
-def set_global_variable_type(
+def set_gvar_type(
     variable_name: Annotated[str, "Name of the global variable"],
     new_type: Annotated[str, "New type for the variable"],
 ):
@@ -1197,7 +1197,7 @@ def set_global_variable_type(
 
 @jsonrpc
 @idaread
-def get_global_variable_value_by_name(variable_name: Annotated[str, "Name of the global variable"]) -> str:
+def gvar_val_name(variable_name: Annotated[str, "Name of the global variable"]) -> str:
     """
     Read a global variable's value (if known at compile-time)
 
@@ -1207,20 +1207,20 @@ def get_global_variable_value_by_name(variable_name: Annotated[str, "Name of the
     if ea == idaapi.BADADDR:
         raise IDAError(f"Global variable {variable_name} not found")
 
-    return get_global_variable_value_internal(ea)
+    return gvar_val_internal(ea)
 
 @jsonrpc
 @idaread
-def get_global_variable_value_at_address(ea: Annotated[str, "Address of the global variable"]) -> str:
+def gvar_val_addr(ea: Annotated[str, "Address of the global variable"]) -> str:
     """
     Read a global variable's value by its address (if known at compile-time)
 
     Prefer this function over the `data_read_*` functions.
     """
     ea = parse_address(ea)
-    return get_global_variable_value_internal(ea)
+    return gvar_val_internal(ea)
 
-def get_global_variable_value_internal(ea: int) -> str:
+def gvar_val_internal(ea: int) -> str:
      # Get the type information for the variable
      tif = ida_typeinf.tinfo_t()
      if not ida_nalt.get_tinfo(tif, ea):
@@ -1254,7 +1254,7 @@ def get_global_variable_value_internal(ea: int) -> str:
 
 @jsonrpc
 @idawrite
-def rename_function(
+def ren_func(
     function_address: Annotated[str, "Address of the function to rename"],
     new_name: Annotated[str, "New name for the function (empty for a default name)"],
 ):
@@ -1268,7 +1268,7 @@ def rename_function(
 
 @jsonrpc
 @idawrite
-def set_function_prototype(
+def set_proto(
     function_address: Annotated[str, "Address of the function"],
     prototype: Annotated[str, "New function prototype"],
 ):
@@ -1340,7 +1340,7 @@ def parse_decls_ctypes(decls: str, hti_flags: int) -> tuple[int, str]:
 
 @jsonrpc
 @idawrite
-def declare_c_type(
+def decl_type(
     c_declaration: Annotated[str, "C declaration of the type. Examples include: typedef int foo_t; struct bar { int a; bool b; };"],
 ):
     """Create or update a local type from a C declaration"""
@@ -1357,7 +1357,7 @@ def declare_c_type(
 
 @jsonrpc
 @idawrite
-def set_local_variable_type(
+def set_lvar_type(
     function_address: Annotated[str, "Address of the decompiled function containing the variable"],
     variable_name: Annotated[str, "Name of the variable"],
     new_type: Annotated[str, "New type for the variable"],
@@ -1391,13 +1391,13 @@ class StackFrameVariable(TypedDict):
 
 @jsonrpc
 @idaread
-def get_stack_frame_variables(
+def stack_vars(
         function_address: Annotated[str, "Address of the disassembled function to retrieve the stack frame variables"]
 ) -> list[StackFrameVariable]:
     """ Retrieve the stack frame variables for a given function """
-    return get_stack_frame_variables_internal(parse_address(function_address))
+    return stack_vars_internal(parse_address(function_address))
 
-def get_stack_frame_variables_internal(function_address: int) -> list[dict]:
+def stack_vars_internal(function_address: int) -> list[dict]:
     func = idaapi.get_func(function_address)
     if not func:
         raise IDAError(f"No function found at address {function_address}")
@@ -1438,7 +1438,7 @@ class StructureDefinition(TypedDict):
 
 @jsonrpc
 @idaread
-def get_defined_structures() -> list[StructureDefinition]:
+def structs() -> list[StructureDefinition]:
     """ Returns a list of all defined structures """
 
     rv = []
@@ -1466,7 +1466,7 @@ def get_defined_structures() -> list[StructureDefinition]:
 
 @jsonrpc
 @idawrite
-def rename_stack_frame_variable(
+def ren_svar(
         function_address: Annotated[str, "Address of the disassembled function to set the stack frame variables"],
         old_name: Annotated[str, "Current name of the variable"],
         new_name: Annotated[str, "New name for the variable (empty for a default name)"]
@@ -1500,7 +1500,7 @@ def rename_stack_frame_variable(
 
 @jsonrpc
 @idawrite
-def create_stack_frame_variable(
+def new_svar(
         function_address: Annotated[str, "Address of the disassembled function to set the stack frame variables"],
         offset: Annotated[str, "Offset of the stack frame variable"],
         variable_name: Annotated[str, "Name of the stack variable"],
@@ -1524,7 +1524,7 @@ def create_stack_frame_variable(
 
 @jsonrpc
 @idawrite
-def set_stack_frame_variable_type(
+def set_svar_type(
         function_address: Annotated[str, "Address of the disassembled function to set the stack frame variables"],
         variable_name: Annotated[str, "Name of the stack variable"],
         type_name: Annotated[str, "Type of the stack variable"]
@@ -1554,7 +1554,7 @@ def set_stack_frame_variable_type(
 
 @jsonrpc
 @idawrite
-def delete_stack_frame_variable(
+def del_svar(
         function_address: Annotated[str, "Address of the function to set the stack frame variables"],
         variable_name: Annotated[str, "Name of the stack variable"]
 ):
@@ -1588,7 +1588,7 @@ def delete_stack_frame_variable(
 
 @jsonrpc
 @idaread
-def read_memory_bytes(
+def read_mem(
         memory_address: Annotated[str, "Address of the memory value to be read"],
         size: Annotated[int, "size of memory to read"]
 ) -> str:
@@ -1602,7 +1602,7 @@ def read_memory_bytes(
 
 @jsonrpc
 @idaread
-def data_read_byte(
+def read_byte(
     address: Annotated[str, "Address to get 1 byte value from"],
 ) -> int:
     """
@@ -1615,7 +1615,7 @@ def data_read_byte(
 
 @jsonrpc
 @idaread
-def data_read_word(
+def read_word(
     address: Annotated[str, "Address to get 2 bytes value from"],
 ) -> int:
     """
@@ -1628,7 +1628,7 @@ def data_read_word(
 
 @jsonrpc
 @idaread
-def data_read_dword(
+def read_dword(
     address: Annotated[str, "Address to get 4 bytes value from"],
 ) -> int:
     """
@@ -1641,7 +1641,7 @@ def data_read_dword(
 
 @jsonrpc
 @idaread
-def data_read_qword(
+def read_qword(
         address: Annotated[str, "Address to get 8 bytes value from"]
 ) -> int:
     """
@@ -1654,7 +1654,7 @@ def data_read_qword(
 
 @jsonrpc
 @idaread
-def data_read_string(
+def read_str(
         address: Annotated[str, "Address to get string from"]
 ) -> str:
     """
@@ -1670,7 +1670,7 @@ def data_read_string(
 @jsonrpc
 @idaread
 @unsafe
-def dbg_get_registers() -> list[dict[str, str]]:
+def regs() -> list[dict[str, str]]:
     """Get all registers and their values. This function is only available when debugging."""
     result = []
     dbg = ida_idd.get_dbg()
@@ -1699,7 +1699,7 @@ def dbg_get_registers() -> list[dict[str, str]]:
 @jsonrpc
 @idaread
 @unsafe
-def dbg_get_call_stack() -> list[dict[str, str]]:
+def stack() -> list[dict[str, str]]:
     """Get the current call stack."""
     callstack = []
     try:
@@ -1762,14 +1762,14 @@ def list_breakpoints():
 @jsonrpc
 @idaread
 @unsafe
-def dbg_list_breakpoints():
+def bps():
     """List all breakpoints in the program."""
     return list_breakpoints()
 
 @jsonrpc
 @idaread
 @unsafe
-def dbg_start_process() -> str:
+def start() -> str:
     """Start the debugger"""
     if idaapi.start_process("", "", ""):
         return "Debugger started"
@@ -1778,7 +1778,7 @@ def dbg_start_process() -> str:
 @jsonrpc
 @idaread
 @unsafe
-def dbg_exit_process() -> str:
+def exit() -> str:
     """Exit the debugger"""
     if idaapi.exit_process():
         return "Debugger exited"
@@ -1787,7 +1787,7 @@ def dbg_exit_process() -> str:
 @jsonrpc
 @idaread
 @unsafe
-def dbg_continue_process() -> str:
+def cont() -> str:
     """Continue the debugger"""
     if idaapi.continue_process():
         return "Debugger continued"
@@ -1796,7 +1796,7 @@ def dbg_continue_process() -> str:
 @jsonrpc
 @idaread
 @unsafe
-def dbg_run_to(
+def run_to(
     address: Annotated[str, "Run the debugger to the specified address"],
 ) -> str:
     """Run the debugger to the specified address"""
@@ -1808,7 +1808,7 @@ def dbg_run_to(
 @jsonrpc
 @idaread
 @unsafe
-def dbg_set_breakpoint(
+def set_bp(
     address: Annotated[str, "Set a breakpoint at the specified address"],
 ) -> str:
     """Set a breakpoint at the specified address"""
@@ -1824,7 +1824,7 @@ def dbg_set_breakpoint(
 @jsonrpc
 @idaread
 @unsafe
-def dbg_delete_breakpoint(
+def del_bp(
     address: Annotated[str, "del a breakpoint at the specified address"],
 ) -> str:
     """del a breakpoint at the specified address"""
@@ -1836,7 +1836,7 @@ def dbg_delete_breakpoint(
 @jsonrpc
 @idaread
 @unsafe
-def dbg_enable_breakpoint(
+def en_bp(
     address: Annotated[str, "Enable or disable a breakpoint at the specified address"],
     enable: Annotated[bool, "Enable or disable a breakpoint"],
 ) -> str:
